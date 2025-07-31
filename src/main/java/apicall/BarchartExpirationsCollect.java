@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
+import static Util.ProxyManager.getPublicIP;
+
 public class BarchartExpirationsCollect {
 
     private static Path logFile;
@@ -96,11 +98,11 @@ public class BarchartExpirationsCollect {
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             InetSocketAddress proxyUsed = null;
             try {
-                proxyUsed = proxyManager.getCurrentProxy();
+                proxyUsed = proxyManager.getNextProxy();
                 HttpClient client = createHttpClientForSymbol(proxyUsed);
-
+                String ip = getPublicIP(client);
                 // Log which proxy is being used for this ticker
-//                log("Processing " + ticker + " using proxy: " + proxyUsed);
+                log("Processing " + ticker + " using proxy: " + proxyUsed +  ", public IP detected: " + ip);
 
                 // ---- ALWAYS fetch page -> get fresh cookies & XSRF token ----
                 String pageUrl = "https://www.barchart.com/stocks/quotes/" + ticker + "/put-call-ratios";

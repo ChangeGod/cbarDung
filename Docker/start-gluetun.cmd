@@ -16,4 +16,4 @@ if %ERRORLEVEL%==0 (
     echo Failed to start containers. Is Docker Desktop running?
 )
 
-pause
+

@@ -2,7 +2,11 @@ package Util;
 
 import java.net.InetSocketAddress;
 import java.net.ProxySelector;
+import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -68,7 +72,7 @@ public class ProxyManager {
     }
 
 
-    private InetSocketAddress getNextProxy() {
+    public InetSocketAddress getNextProxy() {
         if (proxies.isEmpty()) return null;
 
         for (int i = 0; i < proxies.size(); i++) {
@@ -80,6 +84,24 @@ public class ProxyManager {
         }
         return null; // all proxies marked bad
     }
+    public static String getPublicIP(HttpClient client) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.ipify.org?format=text"))
+                    .GET()
+                    .timeout(Duration.ofSeconds(10))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            return (response.statusCode() == 200)
+                    ? response.body().trim()
+                    : "Failed, status " + response.statusCode();
+        } catch (Exception e) {
+            return "Error fetching IP: " + e.getMessage();
+        }
+    }
+
+
 
     public InetSocketAddress getCurrentProxy() {
         if (proxies.isEmpty()) return null;
