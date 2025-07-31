@@ -70,7 +70,7 @@ public class ProxyManager {
     public HttpClient getHttpClient() {
         InetSocketAddress proxyAddress = getNextProxy();
         if (proxyAddress == null) {
-            logger.accept("No valid proxies available. Using direct connection.");
+//            logger.accept("No valid proxies available. Using direct connection.");
             return HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
         }
 

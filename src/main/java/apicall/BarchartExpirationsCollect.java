@@ -96,7 +96,7 @@ public class BarchartExpirationsCollect {
                 proxyUsed = proxyManager.getCurrentProxy();
 
                 // Log which proxy is being used for this ticker
-                log("Processing " + ticker + " using proxy: " + proxyUsed);
+//                log("Processing " + ticker + " using proxy: " + proxyUsed);
 
                 String pageUrl = "https://www.barchart.com/stocks/quotes/" + ticker + "/put-call-ratios";
                 HttpRequest pageRequest = HttpRequest.newBuilder()
