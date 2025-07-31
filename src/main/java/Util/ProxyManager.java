@@ -67,18 +67,6 @@ public class ProxyManager {
         this.useRotation = rotationFlag;
     }
 
-    public HttpClient getHttpClient() {
-        InetSocketAddress proxyAddress = getNextProxy();
-        if (proxyAddress == null) {
-//            logger.accept("No valid proxies available. Using direct connection.");
-            return HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
-        }
-
-        return HttpClient.newBuilder()
-                .proxy(ProxySelector.of(proxyAddress))
-                .followRedirects(HttpClient.Redirect.ALWAYS)
-                .build();
-    }
 
     private InetSocketAddress getNextProxy() {
         if (proxies.isEmpty()) return null;

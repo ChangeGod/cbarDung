@@ -2,12 +2,11 @@ package apicall;
 
 import Util.ConfigLoader;
 import Util.ProxyManager;
+import Util.UserAgentProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.net.URLDecoder;
+import java.net.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -56,7 +55,7 @@ public class BarchartExpirationsCollect {
             return;
         }
 
-        int threadCount = Runtime.getRuntime().availableProcessors();
+        int threadCount = Runtime.getRuntime().availableProcessors()/2;
         log("Thread count set to: " + threadCount);
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
@@ -73,39 +72,48 @@ public class BarchartExpirationsCollect {
     private static void handleRateLimit() {
         synchronized (rateLimitLock) {
             long now = System.currentTimeMillis();
-            if (now - lastRateLimitWait > 30000) {
-                log("Global rate limit hit, waiting 30s before continuing...");
-                try {
-                    Thread.sleep(30000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                lastRateLimitWait = System.currentTimeMillis();
-            } else {
+            long elapsed = now - lastRateLimitWait;
+
+            if (elapsed < 30000) {
+                // already handled recently
                 log("Rate limit recently handled, skipping additional wait.");
+                return;
+            }
+
+            log("Global rate limit hit, waiting 30s before continuing...");
+            lastRateLimitWait = now;
+            try {
+                Thread.sleep(30000); // <---- This now blocks all threads waiting here
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
     }
+
 
     private static void processTicker(String ticker, ConfigLoader config, ProxyManager proxyManager) {
         int maxRetries = 10;
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             InetSocketAddress proxyUsed = null;
             try {
-                HttpClient client = proxyManager.getHttpClient();
                 proxyUsed = proxyManager.getCurrentProxy();
+                HttpClient client = createHttpClientForSymbol(proxyUsed);
 
                 // Log which proxy is being used for this ticker
 //                log("Processing " + ticker + " using proxy: " + proxyUsed);
 
+                // ---- ALWAYS fetch page -> get fresh cookies & XSRF token ----
                 String pageUrl = "https://www.barchart.com/stocks/quotes/" + ticker + "/put-call-ratios";
                 HttpRequest pageRequest = HttpRequest.newBuilder()
                         .uri(URI.create(pageUrl))
                         .GET()
                         .timeout(Duration.ofSeconds(30))
-                        .header("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+                        .header("user-agent", UserAgentProvider.getRandomUserAgent())
+                        .header("accept-language", "en-US,en;q=0.9")
+                        .header("cache-control", "no-cache")
                         .header("accept", "text/html")
                         .build();
+
                 HttpResponse<String> pageResponse = client.send(pageRequest, HttpResponse.BodyHandlers.ofString());
 
                 List<String> setCookies = pageResponse.headers().allValues("set-cookie");
@@ -114,6 +122,7 @@ public class BarchartExpirationsCollect {
                         .collect(Collectors.joining("; ")) + "; bcFreeUserPageView=0";
                 String xsrfToken = extractXsrfFromCookies(setCookies);
 
+                // ---- API Call ----
                 String apiUrl = "https://www.barchart.com/proxies/core-api/v1/options-expirations/get"
                         + "?fields=expirationDate%2CexpirationType%2CsymbolCode"
                         + "&symbol=" + ticker
@@ -127,23 +136,21 @@ public class BarchartExpirationsCollect {
                         .header("cookie", cookieHeader)
                         .header("x-xsrf-token", xsrfToken)
                         .header("referer", pageUrl)
-                        .header("sec-fetch-dest", "empty")
-                        .header("sec-fetch-mode", "cors")
-                        .header("sec-fetch-site", "same-origin")
-                        .header("sec-ch-ua", "\"Chromium\";v=\"120\", \"Not-A.Brand\";v=\"99\"")
-                        .header("sec-ch-ua-mobile", "?0")
-                        .header("sec-ch-ua-platform", "\"Windows\"")
                         .build();
 
                 HttpResponse<String> apiResponse = client.send(apiRequest, HttpResponse.BodyHandlers.ofString());
 
+                // ---- Response Handling ----
                 if (apiResponse.statusCode() == 200) {
                     saveToDatabase(apiResponse.body(), config, ticker);
                     log("Data inserted/updated for: " + ticker);
-                    break; // success, stop retry loop
+                    break; // success
                 } else if (apiResponse.statusCode() == 429) {
                     log("Rate limit hit for " + ticker);
                     handleRateLimit();
+                } else if (apiResponse.statusCode() == 403) {
+                    log("403 Forbidden for " + ticker + " - refreshing session & retrying");
+                    proxyManager.markProxyBad(proxyUsed); // optional
                 } else if (apiResponse.statusCode() == 502) {
                     log("Tunnel failed for ticker " + ticker + " - will retry with next proxy.");
                     if (proxyUsed != null) proxyManager.markProxyBad(proxyUsed);
@@ -235,7 +242,16 @@ public class BarchartExpirationsCollect {
                 .findFirst()
                 .orElse("");
     }
+    private static HttpClient createHttpClientForSymbol(InetSocketAddress proxy) {
+        CookieManager cookieManager = new CookieManager();
+        cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
 
+        return HttpClient.newBuilder()
+                .proxy(ProxySelector.of(proxy))
+                .cookieHandler(cookieManager)
+                .connectTimeout(Duration.ofSeconds(30))
+                .build();
+    }
     private static void log(String message) {
         String timestamp = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now());
         String line = "[" + timestamp + "] " + message;
