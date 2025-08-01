@@ -1,0 +1,24 @@
+
+services:
+  barchart-priority:
+    build:
+      context: ..
+      dockerfile: Deploy/Dockerfile
+      args:
+        CRONTAB_FILE: Deploy/crontab-priority.txt
+    volumes:
+      - ../src/main/resources/docker-config.properties:/app/docker-config.properties
+      - /c/Project/Paul/Paul/Log:/app/logs
+#    command: [ "java", "-Dconfig.file=/app/docker-config.properties", "-jar", "/app/barchart.jar", "priority" ]
+  
+  
+  barchart-all:
+    build:
+      context: ..
+      dockerfile: Deploy/Dockerfile
+      args:
+        CRONTAB_FILE: Deploy/crontab-all.txt
+    volumes:
+      - ../src/main/resources/docker-config.properties:/app/docker-config.properties
+      - /c/Project/Paul/Paul/Log:/app/logs
+#    command: ["java", "-Dconfig.file=/app/docker-config.properties", "-jar", "/app/barchart.jar"]

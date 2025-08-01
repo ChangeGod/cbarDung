@@ -45,6 +45,8 @@ public class BarchartCollect {
             System.out.println("    -> Processes only the specified symbol (e.g., AAPL)");
             System.out.println("  java -cp yourJar.jar apicall.BarchartExpirationsCollect priority");
             System.out.println("    -> Processes only symbols with Priority=1");
+            System.out.println("  java -cp yourJar.jar apicall.BarchartExpirationsCollect priority 8");
+            System.out.println("    -> Processes only Priority=1 symbols using 8 threads");
             return;
         }
 
@@ -56,24 +58,34 @@ public class BarchartCollect {
         if (!Files.exists(logDirPath)) {
             Files.createDirectories(logDirPath);
         }
+
+
+        String modeSuffix = (args.length == 1 && args[0].equalsIgnoreCase("priority"))
+                ? "_priority"
+                : "_all";
+
         String timestamp = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss").format(LocalDateTime.now());
-        logFile = logDirPath.resolve("barchart_" + timestamp + ".log");
+        String logName = "barchart" + modeSuffix + "_" + timestamp + ".log";
+
+        logFile = logDirPath.resolve(logName);
+
 
         // ---- Initialize ProxyManager with logger ----
         ProxyManager proxyManager = new ProxyManager(config, message -> log(message));
 
         List<String> tickers;
 
-        if (args.length == 1) {
+        if (args.length >= 1) {
             String arg = args[0].trim().toLowerCase();
-
             if ("priority".equals(arg)) {
                 log("Running in PRIORITY mode (only Priority=1 symbols)");
                 tickers = loadTickers(config, true);
-            } else {
+            } else if (!"priority".equals(arg)) {
                 log("Running in single-symbol mode for: " + args[0]);
                 tickers = new ArrayList<>();
                 tickers.add(args[0].toUpperCase());
+            } else {
+                tickers = loadTickers(config, false);
             }
         } else {
             tickers = loadTickers(config, false);
@@ -83,9 +95,21 @@ public class BarchartCollect {
             }
         }
 
+        // ---- Thread count ----
+        int threadCount;
+        if (args.length >= 2) {
+            try {
+                threadCount = Integer.parseInt(args[1]);
+                log("Thread count set from argument: " + threadCount);
+            } catch (NumberFormatException e) {
+                log("Invalid thread count argument, using default.");
+                threadCount = Runtime.getRuntime().availableProcessors();
+            }
+        } else {
+            threadCount = Runtime.getRuntime().availableProcessors();
+            log("Thread count set to available processors: " + threadCount);
+        }
 
-        int threadCount = Runtime.getRuntime().availableProcessors();
-        log("Thread count set to: " + threadCount);
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
         for (String ticker : tickers) {
@@ -97,6 +121,7 @@ public class BarchartCollect {
 
         log("All tickers processed.");
     }
+
 
     private static void handleRateLimit() {
         synchronized (rateLimitLock) {

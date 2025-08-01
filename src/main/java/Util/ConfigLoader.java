@@ -1,12 +1,13 @@
 package Util;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
 public class ConfigLoader {
 
-    private Properties props = new Properties();  // <-- move props here
+    private Properties props = new Properties();
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
@@ -16,16 +17,27 @@ public class ConfigLoader {
     }
 
     private void load() throws IOException {
-        try (InputStream input = getClass().getClassLoader().getResourceAsStream("config.properties")) {
-            if (input == null) {
-                throw new IOException("config.properties not found in resources folder");
-            }
-            props.load(input);
+        String externalPath = System.getProperty("config.file"); // from -Dconfig.file
+        InputStream input;
+        if (externalPath != null) {
+            System.out.println("Loading external config: " + externalPath);
+            input = new FileInputStream(externalPath);
+        } else {
+            input = getClass().getClassLoader().getResourceAsStream("config.properties");
+            System.out.println("Loading default classpath config.properties");
         }
+
+        if (input == null) {
+            throw new IOException("Config file not found!");
+        }
+        props.load(input);
+        input.close();
+
         this.dbUrl = props.getProperty("db.url");
         this.dbUser = props.getProperty("db.user");
         this.dbPassword = props.getProperty("db.password");
     }
+
 
     public String getDbUrl() {
         return dbUrl;
