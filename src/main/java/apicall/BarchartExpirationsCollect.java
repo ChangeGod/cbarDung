@@ -1,8 +1,6 @@
 package apicall;
 
-import Util.ConfigLoader;
-import Util.ProxyManager;
-import Util.UserAgentProvider;
+import Util.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -30,6 +28,7 @@ import java.util.stream.Collectors;
 
 import static Util.ProxyManager.getPublicIP;
 
+
 public class BarchartExpirationsCollect {
 
     private static Path logFile;
@@ -37,6 +36,16 @@ public class BarchartExpirationsCollect {
     private static volatile long lastRateLimitWait = 0;
 
     public static void main(String[] args) throws Exception {
+        // ---- Usage guide ----
+        if (args.length > 0 && (args[0].equalsIgnoreCase("-h") || args[0].equalsIgnoreCase("--help"))) {
+            System.out.println("Usage:");
+            System.out.println("  java -cp yourJar.jar apicall.BarchartExpirationsCollect");
+            System.out.println("    -> Processes all tickers from symbol_list database table");
+            System.out.println("  java -cp yourJar.jar apicall.BarchartExpirationsCollect <SYMBOL>");
+            System.out.println("    -> Processes only the specified symbol (e.g., AAPL)");
+            return;
+        }
+
         ConfigLoader config = new ConfigLoader();
 
         // ---- Prepare log file path ----
@@ -51,13 +60,20 @@ public class BarchartExpirationsCollect {
         // ---- Initialize ProxyManager with logger ----
         ProxyManager proxyManager = new ProxyManager(config, message -> log(message));
 
-        List<String> tickers = loadTickers(config);
-        if (tickers.isEmpty()) {
-            log("No tickers found in symbol_list.");
-            return;
+        List<String> tickers;
+        if (args.length == 1) {
+            log("Running in single-symbol mode for: " + args[0]);
+            tickers = new ArrayList<>();
+            tickers.add(args[0].toUpperCase());
+        } else {
+            tickers = loadTickers(config);
+            if (tickers.isEmpty()) {
+                log("No tickers found in symbol_list.");
+                return;
+            }
         }
 
-        int threadCount = Runtime.getRuntime().availableProcessors()*2;
+        int threadCount = Runtime.getRuntime().availableProcessors();
         log("Thread count set to: " + threadCount);
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
@@ -77,7 +93,6 @@ public class BarchartExpirationsCollect {
             long elapsed = now - lastRateLimitWait;
 
             if (elapsed < 30000) {
-                // already handled recently
                 log("Rate limit recently handled, skipping additional wait.");
                 return;
             }
@@ -92,7 +107,6 @@ public class BarchartExpirationsCollect {
         }
     }
 
-
     private static void processTicker(String ticker, ConfigLoader config, ProxyManager proxyManager) {
         int maxRetries = 10;
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
@@ -101,8 +115,8 @@ public class BarchartExpirationsCollect {
                 proxyUsed = proxyManager.getNextProxy();
                 HttpClient client = createHttpClientForSymbol(proxyUsed);
                 String ip = getPublicIP(client);
-                // Log which proxy is being used for this ticker
-                log("Processing " + ticker + " using proxy: " + proxyUsed +  ", public IP detected: " + ip);
+
+                log("Processing " + ticker + " using proxy: " + proxyUsed + ", public IP detected: " + ip);
 
                 // ---- ALWAYS fetch page -> get fresh cookies & XSRF token ----
                 String pageUrl = "https://www.barchart.com/stocks/quotes/" + ticker + "/put-call-ratios";
@@ -126,9 +140,14 @@ public class BarchartExpirationsCollect {
 
                 // ---- API Call ----
                 String apiUrl = "https://www.barchart.com/proxies/core-api/v1/options-expirations/get"
-                        + "?fields=expirationDate%2CexpirationType%2CsymbolCode"
+                        + "?fields=" + URLEncoder.encode(
+                        "expirationDate,expirationType,daysToExpiration,putVolume,callVolume,totalVolume," +
+                                "putCallVolumeRatio,putOpenInterest,callOpenInterest,totalOpenInterest," +
+                                "putCallOpenInterestRatio,averageVolatility,symbolCode,symbolType,lastPrice,dailyLastPrice",
+                        StandardCharsets.UTF_8)
                         + "&symbol=" + ticker
                         + "&page=1&limit=100&raw=1";
+
 
                 HttpRequest apiRequest = HttpRequest.newBuilder()
                         .uri(URI.create(apiUrl))
@@ -142,6 +161,9 @@ public class BarchartExpirationsCollect {
 
                 HttpResponse<String> apiResponse = client.send(apiRequest, HttpResponse.BodyHandlers.ofString());
 
+                // ---- Log full API response ----
+//                log("API response for " + ticker + ": " + apiResponse.body());
+
                 // ---- Response Handling ----
                 if (apiResponse.statusCode() == 200) {
                     saveToDatabase(apiResponse.body(), config, ticker);
@@ -152,7 +174,7 @@ public class BarchartExpirationsCollect {
                     handleRateLimit();
                 } else if (apiResponse.statusCode() == 403) {
                     log("403 Forbidden for " + ticker + " - refreshing session & retrying");
-                    proxyManager.markProxyBad(proxyUsed); // optional
+                    proxyManager.markProxyBad(proxyUsed);
                 } else if (apiResponse.statusCode() == 502) {
                     log("Tunnel failed for ticker " + ticker + " - will retry with next proxy.");
                     if (proxyUsed != null) proxyManager.markProxyBad(proxyUsed);
@@ -196,9 +218,25 @@ public class BarchartExpirationsCollect {
         try (Connection conn = DriverManager.getConnection(
                 config.getDbUrl(), config.getDbUser(), config.getDbPassword())) {
 
-            String sql = "INSERT INTO market_data(symbol, expiration_date, update_time) "
-                    + "VALUES(?, ?, ?) "
-                    + "ON DUPLICATE KEY UPDATE update_time = VALUES(update_time)";
+            String sql = "INSERT INTO market_data(" +
+                    "symbol, Cycle_Range, expiration_date, update_time, " +
+                    "DTE, Put_Vol, Call_Vol, Total_Vol, " +
+                    "Put_or_Call_Vol, Put_OI, Call_OI, Total_OI, " +
+                    "Put_or_Call_OI, IV) " +
+                    "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                    "ON DUPLICATE KEY UPDATE " +
+                    "Cycle_Range = VALUES(Cycle_Range), " +
+                    "update_time = VALUES(update_time), " +
+                    "DTE = VALUES(DTE), " +
+                    "Put_Vol = VALUES(Put_Vol), " +
+                    "Call_Vol = VALUES(Call_Vol), " +
+                    "Total_Vol = VALUES(Total_Vol), " +
+                    "Put_or_Call_Vol = VALUES(Put_or_Call_Vol), " +
+                    "Put_OI = VALUES(Put_OI), " +
+                    "Call_OI = VALUES(Call_OI), " +
+                    "Total_OI = VALUES(Total_OI), " +
+                    "Put_or_Call_OI = VALUES(Put_or_Call_OI), " +
+                    "IV = VALUES(IV)";
 
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 for (JsonNode item : dataArray) {
@@ -226,15 +264,41 @@ public class BarchartExpirationsCollect {
 
                     Timestamp nyTimestamp = Timestamp.valueOf(ZonedDateTime.now(nyZone).toLocalDateTime());
 
+                    // ---- Parse numeric fields ----
+                    int daysToExpiration = NumberParser.parseIntSafe(item.path("daysToExpiration").asText());
+                    int putVolume = NumberParser.parseIntSafe(item.path("putVolume").asText());
+                    int callVolume = NumberParser.parseIntSafe(item.path("callVolume").asText());
+                    int totalVolume = NumberParser.parseIntSafe(item.path("totalVolume").asText());
+                    double putCallVolumeRatio = NumberParser.parseDoubleSafe(item.path("putCallVolumeRatio").asText());
+                    int putOpenInterest = NumberParser.parseIntSafe(item.path("putOpenInterest").asText());
+                    int callOpenInterest = NumberParser.parseIntSafe(item.path("callOpenInterest").asText());
+                    int totalOpenInterest = NumberParser.parseIntSafe(item.path("totalOpenInterest").asText());
+                    double putCallOpenInterestRatio = NumberParser.parseDoubleSafe(item.path("putCallOpenInterestRatio").asText());
+                    double impliedVolatility = NumberParser.parseVolatility(item.path("averageVolatility").asText());
+
+                    // ---- Set SQL parameters ----
                     stmt.setString(1, tickerFromDb);
-                    stmt.setString(2, expirationKey);
-                    stmt.setTimestamp(3, nyTimestamp);
+                    stmt.setString(2, CycleHelper.getCycleRange());
+                    stmt.setString(3, expirationKey);
+                    stmt.setTimestamp(4, nyTimestamp);
+                    stmt.setInt(5, daysToExpiration);
+                    stmt.setInt(6, putVolume);
+                    stmt.setInt(7, callVolume);
+                    stmt.setInt(8, totalVolume);
+                    stmt.setDouble(9, putCallVolumeRatio);
+                    stmt.setInt(10, putOpenInterest);
+                    stmt.setInt(11, callOpenInterest);
+                    stmt.setInt(12, totalOpenInterest);
+                    stmt.setDouble(13, putCallOpenInterestRatio);
+                    stmt.setDouble(14, impliedVolatility);
+
                     stmt.addBatch();
                 }
                 stmt.executeBatch();
             }
         }
     }
+
 
     private static String extractXsrfFromCookies(List<String> cookies) {
         return cookies.stream()
@@ -244,6 +308,7 @@ public class BarchartExpirationsCollect {
                 .findFirst()
                 .orElse("");
     }
+
     private static HttpClient createHttpClientForSymbol(InetSocketAddress proxy) {
         CookieManager cookieManager = new CookieManager();
         cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
@@ -254,6 +319,7 @@ public class BarchartExpirationsCollect {
                 .connectTimeout(Duration.ofSeconds(30))
                 .build();
     }
+
     private static void log(String message) {
         String timestamp = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now());
         String line = "[" + timestamp + "] " + message;
