@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 import static Util.ProxyManager.getPublicIP;
 
 
-public class BarchartExpirationsCollect {
+public class BarchartCollect {
 
     private static Path logFile;
     private static final Object rateLimitLock = new Object();
@@ -43,6 +43,8 @@ public class BarchartExpirationsCollect {
             System.out.println("    -> Processes all tickers from symbol_list database table");
             System.out.println("  java -cp yourJar.jar apicall.BarchartExpirationsCollect <SYMBOL>");
             System.out.println("    -> Processes only the specified symbol (e.g., AAPL)");
+            System.out.println("  java -cp yourJar.jar apicall.BarchartExpirationsCollect priority");
+            System.out.println("    -> Processes only symbols with Priority=1");
             return;
         }
 
@@ -61,17 +63,26 @@ public class BarchartExpirationsCollect {
         ProxyManager proxyManager = new ProxyManager(config, message -> log(message));
 
         List<String> tickers;
+
         if (args.length == 1) {
-            log("Running in single-symbol mode for: " + args[0]);
-            tickers = new ArrayList<>();
-            tickers.add(args[0].toUpperCase());
+            String arg = args[0].trim().toLowerCase();
+
+            if ("priority".equals(arg)) {
+                log("Running in PRIORITY mode (only Priority=1 symbols)");
+                tickers = loadTickers(config, true);
+            } else {
+                log("Running in single-symbol mode for: " + args[0]);
+                tickers = new ArrayList<>();
+                tickers.add(args[0].toUpperCase());
+            }
         } else {
-            tickers = loadTickers(config);
+            tickers = loadTickers(config, false);
             if (tickers.isEmpty()) {
                 log("No tickers found in symbol_list.");
                 return;
             }
         }
+
 
         int threadCount = Runtime.getRuntime().availableProcessors();
         log("Thread count set to: " + threadCount);
@@ -193,11 +204,15 @@ public class BarchartExpirationsCollect {
         }
     }
 
-    private static List<String> loadTickers(ConfigLoader config) throws Exception {
+    private static List<String> loadTickers(ConfigLoader config, boolean priorityOnly) throws Exception {
         List<String> tickers = new ArrayList<>();
+        String sql = priorityOnly
+                ? "SELECT ticker FROM symbol_list WHERE Priority = 1"
+                : "SELECT ticker FROM symbol_list";
+
         try (Connection conn = DriverManager.getConnection(
                 config.getDbUrl(), config.getDbUser(), config.getDbPassword());
-             PreparedStatement stmt = conn.prepareStatement("SELECT ticker FROM symbol_list");
+             PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 tickers.add(rs.getString("ticker"));
@@ -205,6 +220,7 @@ public class BarchartExpirationsCollect {
         }
         return tickers;
     }
+
 
     private static void saveToDatabase(String jsonResponse, ConfigLoader config, String tickerFromDb) throws Exception {
         ObjectMapper mapper = new ObjectMapper();
