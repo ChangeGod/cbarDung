@@ -4,5 +4,5 @@ echo  Stopping Gluetun Containers...
 echo ===============================
 
 cd /d "%~dp0"
-docker compose down
+docker compose -p surfshark down
 

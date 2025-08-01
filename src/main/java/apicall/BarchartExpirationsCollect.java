@@ -57,7 +57,7 @@ public class BarchartExpirationsCollect {
             return;
         }
 
-        int threadCount = Runtime.getRuntime().availableProcessors()/2;
+        int threadCount = Runtime.getRuntime().availableProcessors()*2;
         log("Thread count set to: " + threadCount);
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 

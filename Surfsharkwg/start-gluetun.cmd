@@ -7,7 +7,7 @@ REM Go to the folder where this .cmd file is located
 cd /d "%~dp0"
 
 REM Run docker compose
-docker compose up -d
+docker compose -p surfshark up -d
 
 if %ERRORLEVEL%==0 (
     echo Containers started successfully!

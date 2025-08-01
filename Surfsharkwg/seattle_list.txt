@@ -1,0 +1,592 @@
+seattle
+149.102.254.14
+149.102.254.19
+149.102.254.22
+149.102.254.24
+149.102.254.32
+84.17.41.75
+84.17.41.83
+212.102.46.39
+212.102.46.45
+212.102.46.49
+212.102.46.51
+138.199.12.57
+
+### Server extra for Seattle
+  gluetun61001:
+    image: qmcgaw/gluetun
+    container_name: gluetun61001
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "61001:8888"
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      - WIREGUARD_ENDPOINT_IP=149.102.254.14
+      - WIREGUARD_ENDPOINT_PORT=51820
+      - WIREGUARD_PUBLIC_KEY=SpMH/p90bg9ZAG6V2DWJQ9csWPVnKcDVppIp9Xul5G8=
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_PRESHARED_KEY=xOEI9rqqbDwnN8/Bpp22sVz48T71vJ4fYmFWujulwUU=
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+
+  gluetun61002:
+    image: qmcgaw/gluetun
+    container_name: gluetun61002
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "61002:8888"
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      - WIREGUARD_ENDPOINT_IP=149.102.254.19
+      - WIREGUARD_ENDPOINT_PORT=51820
+      - WIREGUARD_PUBLIC_KEY=SpMH/p90bg9ZAG6V2DWJQ9csWPVnKcDVppIp9Xul5G8=
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_PRESHARED_KEY=xOEI9rqqbDwnN8/Bpp22sVz48T71vJ4fYmFWujulwUU=
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+
+  gluetun61003:
+    image: qmcgaw/gluetun
+    container_name: gluetun61003
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "61003:8888"
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      - WIREGUARD_ENDPOINT_IP=149.102.254.22
+      - WIREGUARD_ENDPOINT_PORT=51820
+      - WIREGUARD_PUBLIC_KEY=SpMH/p90bg9ZAG6V2DWJQ9csWPVnKcDVppIp9Xul5G8=
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_PRESHARED_KEY=xOEI9rqqbDwnN8/Bpp22sVz48T71vJ4fYmFWujulwUU=
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+
+  gluetun61004:
+    image: qmcgaw/gluetun
+    container_name: gluetun61004
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "61004:8888"
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      - WIREGUARD_ENDPOINT_IP=149.102.254.24
+      - WIREGUARD_ENDPOINT_PORT=51820
+      - WIREGUARD_PUBLIC_KEY=SpMH/p90bg9ZAG6V2DWJQ9csWPVnKcDVppIp9Xul5G8=
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_PRESHARED_KEY=xOEI9rqqbDwnN8/Bpp22sVz48T71vJ4fYmFWujulwUU=
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+
+  gluetun61005:
+    image: qmcgaw/gluetun
+    container_name: gluetun61005
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "61005:8888"
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      - WIREGUARD_ENDPOINT_IP=149.102.254.32
+      - WIREGUARD_ENDPOINT_PORT=51820
+      - WIREGUARD_PUBLIC_KEY=SpMH/p90bg9ZAG6V2DWJQ9csWPVnKcDVppIp9Xul5G8=
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_PRESHARED_KEY=xOEI9rqqbDwnN8/Bpp22sVz48T71vJ4fYmFWujulwUU=
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+
+  gluetun61006:
+    image: qmcgaw/gluetun
+    container_name: gluetun61006
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "61006:8888"
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      - WIREGUARD_ENDPOINT_IP=84.17.41.75
+      - WIREGUARD_ENDPOINT_PORT=51820
+      - WIREGUARD_PUBLIC_KEY=SpMH/p90bg9ZAG6V2DWJQ9csWPVnKcDVppIp9Xul5G8=
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_PRESHARED_KEY=xOEI9rqqbDwnN8/Bpp22sVz48T71vJ4fYmFWujulwUU=
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+
+  gluetun61007:
+    image: qmcgaw/gluetun
+    container_name: gluetun61007
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "61007:8888"
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      - WIREGUARD_ENDPOINT_IP=84.17.41.83
+      - WIREGUARD_ENDPOINT_PORT=51820
+      - WIREGUARD_PUBLIC_KEY=SpMH/p90bg9ZAG6V2DWJQ9csWPVnKcDVppIp9Xul5G8=
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_PRESHARED_KEY=xOEI9rqqbDwnN8/Bpp22sVz48T71vJ4fYmFWujulwUU=
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+
+  gluetun61008:
+    image: qmcgaw/gluetun
+    container_name: gluetun61008
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "61008:8888"
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      - WIREGUARD_ENDPOINT_IP=212.102.46.39
+      - WIREGUARD_ENDPOINT_PORT=51820
+      - WIREGUARD_PUBLIC_KEY=SpMH/p90bg9ZAG6V2DWJQ9csWPVnKcDVppIp9Xul5G8=
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_PRESHARED_KEY=xOEI9rqqbDwnN8/Bpp22sVz48T71vJ4fYmFWujulwUU=
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+
+  gluetun61009:
+    image: qmcgaw/gluetun
+    container_name: gluetun61009
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "61009:8888"
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      - WIREGUARD_ENDPOINT_IP=212.102.46.45
+      - WIREGUARD_ENDPOINT_PORT=51820
+      - WIREGUARD_PUBLIC_KEY=SpMH/p90bg9ZAG6V2DWJQ9csWPVnKcDVppIp9XulwUU=
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_PRESHARED_KEY=xOEI9rqqbDwnN8/Bpp22sVz48T71vJ4fYmFWujulwUU=
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+
+  gluetun61010:
+    image: qmcgaw/gluetun
+    container_name: gluetun61010
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "61010:8888"
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      - WIREGUARD_ENDPOINT_IP=212.102.46.49
+      - WIREGUARD_ENDPOINT_PORT=51820
+      - WIREGUARD_PUBLIC_KEY=SpMH/p90bg9ZAG6V2DWJQ9csWPVnKcDVppIp9XulwUU=
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_PRESHARED_KEY=xOEI9rqqbDwnN8/Bpp22sVz48T71vJ4fYmFWujulwUU=
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+
+  gluetun61011:
+    image: qmcgaw/gluetun
+    container_name: gluetun61011
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "61011:8888"
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      - WIREGUARD_ENDPOINT_IP=212.102.46.51
+      - WIREGUARD_ENDPOINT_PORT=51820
+      - WIREGUARD_PUBLIC_KEY=SpMH/p90bg9ZAG6V2DWJQ9csWPVnKcDVppIp9XulwUU=
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_PRESHARED_KEY=xOEI9rqqbDwnN8/Bpp22sVz48T71vJ4fYmFWujulwUU=
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+
+  gluetun61012:
+    image: qmcgaw/gluetun
+    container_name: gluetun61012
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "61012:8888"
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      - WIREGUARD_ENDPOINT_IP=138.199.12.57
+      - WIREGUARD_ENDPOINT_PORT=51820
+      - WIREGUARD_PUBLIC_KEY=SpMH/p90bg9ZAG6V2DWJQ9csWPVnKcDVppIp9XulwUU=
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_PRESHARED_KEY=xOEI9rqqbDwnN8/Bpp22sVz48T71vJ4fYmFWujulwUU=
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+### Cities
+  gluetun60033:
+    image: qmcgaw/gluetun
+    container_name: gluetun60033
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60033:8888" # Bordeaux
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=France
+      - SERVER_CITIES=Bordeaux
+
+  gluetun60034:
+    image: qmcgaw/gluetun
+    container_name: gluetun60034
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60034:8888" # Marseille
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=France
+      - SERVER_CITIES=Marseille
+
+  gluetun60035:
+    image: qmcgaw/gluetun
+    container_name: gluetun60035
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60035:8888" # Paris
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=France
+      - SERVER_CITIES=Paris
+  gluetun60036:
+    image: qmcgaw/gluetun
+    container_name: gluetun60036
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60036:8888" # Brussels
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=Belgium
+      - SERVER_CITIES=Brussels
+
+  gluetun60037:
+    image: qmcgaw/gluetun
+    container_name: gluetun60037
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60037:8888" # Antwerp
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=Belgium
+      - SERVER_CITIES=Antwerp
+  gluetun60038:
+    image: qmcgaw/gluetun
+    container_name: gluetun60038
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60038:8888" # Frankfurt am Main
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=Germany
+      - SERVER_CITIES=Frankfurt am Main
+
+  gluetun60039:
+    image: qmcgaw/gluetun
+    container_name: gluetun60039
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60039:8888" # Berlin
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=Germany
+      - SERVER_CITIES=Berlin
+  gluetun60040:
+    image: qmcgaw/gluetun
+    container_name: gluetun60040
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60040:8888" # Milan
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=Italy
+      - SERVER_CITIES=Milan
+
+  gluetun60041:
+    image: qmcgaw/gluetun
+    container_name: gluetun60041
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60041:8888" # Rome
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=Italy
+      - SERVER_CITIES=Rome
+  gluetun60042:
+    image: qmcgaw/gluetun
+    container_name: gluetun60042
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60042:8888" # Warsaw
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=Poland
+      - SERVER_CITIES=Warsaw
+
+  gluetun60043:
+    image: qmcgaw/gluetun
+    container_name: gluetun60043
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60043:8888" # Gdansk
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=Poland
+      - SERVER_CITIES=Gdansk
+  gluetun60044:
+    image: qmcgaw/gluetun
+    container_name: gluetun60044
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60044:8888" # Lisbon
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=Portugal
+      - SERVER_CITIES=Lisbon
+
+  gluetun60045:
+    image: qmcgaw/gluetun
+    container_name: gluetun60045
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60045:8888" # Porto
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=Portugal
+      - SERVER_CITIES=Porto
+  gluetun60046:
+    image: qmcgaw/gluetun
+    container_name: gluetun60046
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60046:8888" # Valencia
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=Spain
+      - SERVER_CITIES=Valencia
+
+  gluetun60047:
+    image: qmcgaw/gluetun
+    container_name: gluetun60047
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60047:8888" # Barcelona
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=Spain
+      - SERVER_CITIES=Barcelona
+
+  gluetun60048:
+    image: qmcgaw/gluetun
+    container_name: gluetun60048
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60048:8888" # Madrid
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=Spain
+      - SERVER_CITIES=Madrid
+  gluetun60049:
+    image: qmcgaw/gluetun
+    container_name: gluetun60049
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60049:8888" # Australia - Sydney
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=Australia
+      - SERVER_CITIES=Sydney
+
+  gluetun60050:
+    image: qmcgaw/gluetun
+    container_name: gluetun60050
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60050:8888" # Australia - Melbourne
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=Australia
+      - SERVER_CITIES=Melbourne
+
+  gluetun60051:
+    image: qmcgaw/gluetun
+    container_name: gluetun60051
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60051:8888" # Australia - Brisbane
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=Australia
+      - SERVER_CITIES=Brisbane
+
+  gluetun60052:
+    image: qmcgaw/gluetun
+    container_name: gluetun60052
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60052:8888" # Australia - Adelaide
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=Australia
+      - SERVER_CITIES=Adelaide
+
+  gluetun60053:
+    image: qmcgaw/gluetun
+    container_name: gluetun60053
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "60053:8888" # Australia - Perth
+    environment:
+      - HTTPPROXY=on
+      - HTTPPROXY_PORT=8888
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${surfshark_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=10.14.0.2/16
+      - SERVER_COUNTRIES=Australia
+      - SERVER_CITIES=Perth
