@@ -1,77 +1,83 @@
 package apicall;
 
-import java.net.URI;
+import java.net.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.time.Duration;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import Util.ConfigLoader;
+import Util.ProxyManager;
+import Util.UserAgentProvider;
 
 public class BarchartHtmlFetcher {
 
-    /**
-     * Fetch HTML from Barchart, parse volatility data, and update database.
-     *
-     * @param symbol Stock ticker (e.g., "AAPL")
-     */
-    public static void fetchAndStoreVolatilityData(String symbol) {
+    public static void fetchAndStoreVolatilityData(String symbol, ConfigLoader config, ProxyManager proxyManager) {
+        InetSocketAddress proxyUsed = null;
         try {
-            // --- Load DB config ---
-            ConfigLoader config = new ConfigLoader();
-
-            // --- Fetch HTML ---
-            String url = "https://www.barchart.com/stocks/quotes/" + symbol + "/put-call-ratios?orderBy=averageVolatility&orderDir=desc";
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .header("user-agent",
-                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 OPR/120.0.0.0")
-                    .GET()
+            // --- Pick proxy (same as processTicker) ---
+            proxyUsed = proxyManager.getNextProxy();
+            HttpClient client = HttpClient.newBuilder()
+                    .proxy(ProxySelector.of(proxyUsed))
+                    .cookieHandler(new CookieManager(null, CookiePolicy.ACCEPT_ALL))
+                    .connectTimeout(Duration.ofSeconds(30))
                     .build();
 
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            // --- Fetch page to get cookies ---
+            String pageUrl = "https://www.barchart.com/stocks/quotes/" + symbol + "/put-call-ratios?orderBy=averageVolatility&orderDir=desc";
+            HttpRequest pageRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(pageUrl))
+                    .header("user-agent", UserAgentProvider.getRandomUserAgent())
+                    .header("accept-language", "en-US,en;q=0.9")
+                    .header("cache-control", "no-cache")
+                    .header("accept", "text/html")
+                    .GET()
+                    .timeout(Duration.ofSeconds(30))
+                    .build();
 
-            if (response.statusCode() == 200) {
-                String html = response.body();
-
-                // --- Parse HTML ---
-                Document doc = Jsoup.parse(html);
-
-                Element hvElement = doc.select("span:contains(Historic Volatility:) ~ span strong").first();
-                String historicVolatility = hvElement != null ? hvElement.text().replace("%", "") : "0";
-
-                Element ivRankElement = doc.select("span:contains(IV Rank:) ~ span strong").first();
-                String ivRank = ivRankElement != null ? ivRankElement.text().replace("%", "") : "0";
-
-                Element ivPercentileElement = doc.select("span:contains(IV Percentile:) ~ span strong").first();
-                String ivPercentile = ivPercentileElement != null ? ivPercentileElement.text().replace("%", "") : "0";
-
-//                System.out.println("Historic Volatility: " + historicVolatility + "%");
-//                System.out.println("IV Rank: " + ivRank + "%");
-//                System.out.println("IV Percentile: " + ivPercentile + "%");
-
-                // --- Insert into DB ---
-                double hvVal = parseDoubleSafe(historicVolatility);
-                double ivRankVal = parseDoubleSafe(ivRank);
-                double ivPercentileVal = parseDoubleSafe(ivPercentile);
-
-                insertIntoDatabase(symbol, hvVal, ivRankVal, ivPercentileVal, config);
-
-
-
-            } else {
-                System.err.println("Failed to fetch HTML. Status: " + response.statusCode());
+            HttpResponse<String> pageResponse = client.send(pageRequest, HttpResponse.BodyHandlers.ofString());
+            if (pageResponse.statusCode() != 200) {
+                System.err.println("Failed to fetch page for " + symbol + " Status=" + pageResponse.statusCode());
+                proxyManager.markProxyBad(proxyUsed);
+                return;
             }
 
+            // --- Build cookie header ---
+            List<String> setCookies = pageResponse.headers().allValues("set-cookie");
+            String cookieHeader = setCookies.stream()
+                    .map(c -> c.split(";", 2)[0])
+                    .collect(Collectors.joining("; "));
+
+            // --- Parse volatility info from HTML ---
+            Document doc = Jsoup.parse(pageResponse.body());
+            Element hvElement = doc.select("span:contains(Historic Volatility:) ~ span strong").first();
+            String historicVolatility = hvElement != null ? hvElement.text().replace("%", "") : "0";
+
+            Element ivRankElement = doc.select("span:contains(IV Rank:) ~ span strong").first();
+            String ivRank = ivRankElement != null ? ivRankElement.text().replace("%", "") : "0";
+
+            Element ivPercentileElement = doc.select("span:contains(IV Percentile:) ~ span strong").first();
+            String ivPercentile = ivPercentileElement != null ? ivPercentileElement.text().replace("%", "") : "0";
+
+            double hvVal = parseDoubleSafe(historicVolatility);
+            double ivRankVal = parseDoubleSafe(ivRank);
+            double ivPercentileVal = parseDoubleSafe(ivPercentile);
+
+            insertIntoDatabase(symbol, hvVal, ivRankVal, ivPercentileVal, config);
+
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Error fetching HTML for " + symbol + ": " + e.getMessage());
+            if (proxyUsed != null) proxyManager.markProxyBad(proxyUsed);
         }
     }
 
@@ -87,14 +93,10 @@ public class BarchartHtmlFetcher {
             stmt.setDouble(2, ivRank);
             stmt.setDouble(3, ivPercentile);
             stmt.setString(4, symbol);
-
             int rows = stmt.executeUpdate();
             if (rows == 0) {
                 System.out.println("No existing row for symbol '" + symbol + "', consider inserting a new row.");
-            } else {
-//                System.out.println("Database updated successfully for " + symbol);
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -105,12 +107,5 @@ public class BarchartHtmlFetcher {
         value = value.trim();
         if (value.isEmpty() || value.equalsIgnoreCase("N/A")) return 0.0;
         return Double.parseDouble(value);
-    }
-
-
-
-    // --- Simple entry point ---
-    public static void main(String[] args) {
-        fetchAndStoreVolatilityData("AAPL");
     }
 }

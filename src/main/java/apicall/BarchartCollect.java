@@ -113,11 +113,12 @@ public class BarchartCollect {
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
         for (String ticker : tickers) {
-            executor.submit(() -> processTicker(ticker, config, proxyManager));
-            BarchartHtmlFetcher.fetchAndStoreVolatilityData(ticker);
-            log("Data inserted/updated for: " + ticker);
+            executor.submit(() -> {
+                processTicker(ticker, config, proxyManager);
+                BarchartHtmlFetcher.fetchAndStoreVolatilityData(ticker, config, proxyManager);
+                log("Data inserted/updated for: " + ticker);
+            });
         }
-
         executor.shutdown();
         executor.awaitTermination(30, TimeUnit.MINUTES);
 
@@ -154,7 +155,7 @@ public class BarchartCollect {
                 HttpClient client = createHttpClientForSymbol(proxyUsed);
                 String ip = getPublicIP(client);
 
-//                log("Processing " + ticker + " using proxy: " + proxyUsed + ", public IP detected: " + ip);
+                log("Processing " + ticker + " using proxy: " + proxyUsed + ", public IP detected: " + ip);
 
                 // ---- ALWAYS fetch page -> get fresh cookies & XSRF token ----
                 String pageUrl = "https://www.barchart.com/stocks/quotes/" + ticker + "/put-call-ratios";
