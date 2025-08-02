@@ -8,6 +8,9 @@ RUN mvn clean package -DskipTests
 
 # ---- Stage 2: Runtime with Cron ----
 FROM eclipse-temurin:22-jre
+# Set JAVA_HOME and update PATH
+ENV JAVA_HOME=/opt/java/openjdk
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 # Install cron
 RUN apt-get update && apt-get install -y cron tzdata && rm -rf /var/lib/apt/lists/*
