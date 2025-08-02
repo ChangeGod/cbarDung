@@ -24,7 +24,7 @@ public class ConfigLoader {
             input = new FileInputStream(externalPath);
         } else {
             input = getClass().getClassLoader().getResourceAsStream("config.properties");
-            System.out.println("Loading default classpath config.properties");
+//            System.out.println("Loading default classpath config.properties");
         }
 
         if (input == null) {

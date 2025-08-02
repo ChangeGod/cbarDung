@@ -1,17 +1,18 @@
-30 8 * * 1-5 java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
-36 9 * * 1-5 java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
-6 10 * * 1-5 java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
-36 10 * * 1-5 java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
-6 11 * * 1-5 java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
-36 11 * * 1-5 java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
-6 12 * * 1-5 java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
-36 12 * * 1-5 java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
-6 13 * * 1-5 java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
-36 13 * * 1-5 java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
-6 14 * * 1-5 java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
-36 14 * * 1-5 java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
-6 15 * * 1-5 java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
-36 15 * * 1-5 java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
-6 16 * * 1-5 java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
+05 1 * * * java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&
+30 8 * * * java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
+36 9 * * * java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
+6 10 * * * java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
+36 10 * * * java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
+6 11 * * * java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
+36 11 * * * java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
+6 12 * * * java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
+36 12 * * * java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
+6 13 * * * java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
+36 13 * * * java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
+6 14 * * * java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
+36 14 * * * java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
+6 15 * * * java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
+36 15 * * * java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
+6 16 * * * java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar >> /app/logs/all.log 2>&1
 
 # Empty line required at the end
