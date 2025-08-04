@@ -1,4 +1,3 @@
-
 services:
   barchart-priority:
     build:
@@ -9,9 +8,8 @@ services:
     volumes:
       - ../src/main/resources/docker-config.properties:/app/docker-config.properties
       - /c/Project/Paul/Paul/Log:/app/logs
-#    command: [ "java", "-Dconfig.file=/app/docker-config.properties", "-jar", "/app/barchart.jar", "priority" ]
-  
-  
+  #    command: [ "java", "-Dconfig.file=/app/docker-config.properties", "-jar", "/app/barchart.jar", "priority" ]
+
   barchart-all:
     build:
       context: ..
@@ -21,4 +19,12 @@ services:
     volumes:
       - ../src/main/resources/docker-config.properties:/app/docker-config.properties
       - /c/Project/Paul/Paul/Log:/app/logs
-#    command: ["java", "-Dconfig.file=/app/docker-config.properties", "-jar", "/app/barchart.jar"]
+  #    command: ["java", "-Dconfig.file=/app/docker-config.properties", "-jar", "/app/barchart.jar"]
+
+  log-cleaner:
+    image: alpine
+    container_name: log-cleaner
+    volumes:
+      - /c/Project/Paul/Paul/Log:/app/logs
+    command: >
+      sh -c "echo '0 0 * * * rm -rf /app/logs/*' | crontab - && crond -f"
