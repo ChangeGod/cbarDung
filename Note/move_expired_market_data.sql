@@ -7,13 +7,15 @@ CREATE EVENT IF NOT EXISTS move_expired_market_data
     BEGIN
         -- Move expired records to archive
         INSERT INTO market_archive.market_data_archive
-        (symbol, Cycle_Range, expiration_date, update_date, update_time,
+        (symbol, Cycle_Range, expiration_date, expiration_type, update_date, update_time,
          DTE, Put_Vol, Call_Vol, Total_Vol, Put_or_Call_Vol,
-         Put_OI, Call_OI, Total_OI, Put_or_Call_OI, IV)
+         Put_OI, Call_OI, Total_OI, Put_or_Call_OI, IV,
+         Historic_Volatility, IV_Rank, IV_Percentile)
         SELECT
             symbol,
             Cycle_Range,
             expiration_date,
+            expiration_type,
             update_date,
             update_time,
             DTE,
@@ -25,11 +27,14 @@ CREATE EVENT IF NOT EXISTS move_expired_market_data
             Call_OI,
             Total_OI,
             Put_or_Call_OI,
-            IV
+            IV,
+            Historic_Volatility,
+            IV_Rank,
+            IV_Percentile
         FROM your_main_db.market_data
-        WHERE STR_TO_DATE(LEFT(expiration_date, 10), '%Y-%m-%d') < CURDATE();
+        WHERE STR_TO_DATE(expiration_date, '%Y-%m-%d') < CURDATE();
 
         -- Delete moved rows from main table
         DELETE FROM your_main_db.market_data
-        WHERE STR_TO_DATE(LEFT(expiration_date, 10), '%Y-%m-%d') < CURDATE();
+        WHERE STR_TO_DATE(expiration_date, '%Y-%m-%d') < CURDATE();
     END;

@@ -1,8 +1,9 @@
 CREATE TABLE market_data
 (
     symbol              VARCHAR(20)    NOT NULL,
-    Cycle_Range         VARCHAR(50)    NOT NULL,   -- changed here
+    Cycle_Range         VARCHAR(50)    NOT NULL,
     expiration_date     VARCHAR(20)    NOT NULL,
+    expiration_type     VARCHAR(20)    NOT NULL,
     update_date         DATE           NOT NULL,
     update_time         TIME           NOT NULL,
     DTE                 INT            NULL,
@@ -18,5 +19,5 @@ CREATE TABLE market_data
     Historic_Volatility DECIMAL(10, 4) NULL,
     IV_Rank             DECIMAL(10, 4) NULL,
     IV_Percentile       DECIMAL(10, 4) NULL,
-    PRIMARY KEY (symbol, Cycle_Range, expiration_date, update_date)
+    PRIMARY KEY (symbol, Cycle_Range, expiration_date, expiration_type, update_date)
 );
