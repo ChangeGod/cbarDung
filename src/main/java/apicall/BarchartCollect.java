@@ -158,7 +158,8 @@ public class BarchartCollect {
                 String apiUrl = "https://www.barchart.com/proxies/core-api/v1/options-expirations/get"
                         + "?fields=expirationDate,expirationType,daysToExpiration,putVolume,callVolume,totalVolume,"
                         + "putCallVolumeRatio,putOpenInterest,callOpenInterest,totalOpenInterest,"
-                        + "putCallOpenInterestRatio,averageVolatility,symbolCode,symbolType,lastPrice,dailyLastPrice"
+                        + "putCallOpenInterestRatio,averageVolatility,symbolCode,symbolType,lastPrice,dailyLastPrice,"
+                        + "baseLastPrice,impliedMove,impliedMovePercent,baseUpperPrice,baseLowerPrice,"
                         + "&symbol=" + ticker + "&page=1&limit=100&raw=1";
 
                 HttpRequest apiRequest = HttpRequest.newBuilder()
@@ -172,6 +173,9 @@ public class BarchartCollect {
                         .build();
 
                 HttpResponse<String> apiResponse = client.send(apiRequest, HttpResponse.BodyHandlers.ofString());
+
+//                LogUtil.log("API Response for " + ticker + ": " + apiResponse.body());
+
                 if (apiResponse.statusCode() == 200) {
                     saveToDatabase(apiResponse.body(), config, ticker);
                     break;
@@ -199,13 +203,18 @@ public class BarchartCollect {
         try (Connection conn = DriverManager.getConnection(config.getDbUrl(), config.getDbUser(), config.getDbPassword())) {
             String sql = "INSERT INTO market_data(" +
                     "symbol, Cycle_Range, expiration_date, expiration_type, update_date, update_time, " +
-                    "DTE, Put_Vol, Call_Vol, Total_Vol, Put_or_Call_Vol, Put_OI, Call_OI, Total_OI, Put_or_Call_OI, IV) " +
-                    "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                    "DTE, Put_Vol, Call_Vol, Total_Vol, Put_or_Call_Vol, Put_OI, Call_OI, Total_OI, " +
+                    "Put_or_Call_OI, IV, Base_LastPrice, Implied_Move, Implied_Move_Percent, Base_Upper_Price, Base_Lower_Price) " +
+                    "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
                     "ON DUPLICATE KEY UPDATE " +
                     "Cycle_Range=VALUES(Cycle_Range), update_time=VALUES(update_time), expiration_type=VALUES(expiration_type), " +
                     "DTE=VALUES(DTE), Put_Vol=VALUES(Put_Vol), Call_Vol=VALUES(Call_Vol), Total_Vol=VALUES(Total_Vol), " +
                     "Put_or_Call_Vol=VALUES(Put_or_Call_Vol), Put_OI=VALUES(Put_OI), Call_OI=VALUES(Call_OI), " +
-                    "Total_OI=VALUES(Total_OI), Put_or_Call_OI=VALUES(Put_or_Call_OI), IV=VALUES(IV)";
+                    "Total_OI=VALUES(Total_OI), Put_or_Call_OI=VALUES(Put_or_Call_OI), IV=VALUES(IV), " +
+                    "Base_LastPrice=VALUES(Base_LastPrice), Implied_Move=VALUES(Implied_Move), " +
+                    "Implied_Move_Percent=VALUES(Implied_Move_Percent), Base_Upper_Price=VALUES(Base_Upper_Price), " +
+                    "Base_Lower_Price=VALUES(Base_Lower_Price)";
+
 
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 DateTimeFormatter inputFmt = DateTimeFormatter.ofPattern("MM/dd/yy");
@@ -237,6 +246,19 @@ public class BarchartCollect {
                     stmt.setInt(14, NumberParser.parseIntSafe(item.path("totalOpenInterest").asText()));
                     stmt.setDouble(15, NumberParser.parseDoubleSafe(item.path("putCallOpenInterestRatio").asText()));
                     stmt.setDouble(16, NumberParser.parseVolatility(item.path("averageVolatility").asText()));
+                    stmt.setDouble(17, NumberParser.parseDoubleSafe(item.path("baseLastPrice").asText()));
+                    stmt.setDouble(18, NumberParser.parseDoubleSafe(item.path("impliedMove").asText()));
+
+                    // --- FIX: Use raw.impliedMovePercent ---
+                    double impliedMovePercent = 0.0;
+                    JsonNode rawNode = item.path("raw");
+                    if (rawNode != null && rawNode.has("impliedMovePercent")) {
+                        impliedMovePercent = rawNode.path("impliedMovePercent").asDouble();
+                    }
+                    stmt.setDouble(19, impliedMovePercent);
+
+                    stmt.setDouble(20, NumberParser.parseDoubleSafe(item.path("baseUpperPrice").asText()));
+                    stmt.setDouble(21, NumberParser.parseDoubleSafe(item.path("baseLowerPrice").asText()));
 
                     stmt.addBatch();
                 }

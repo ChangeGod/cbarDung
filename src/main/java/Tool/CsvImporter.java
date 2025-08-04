@@ -22,8 +22,14 @@ public class CsvImporter {
             try (Connection conn = DriverManager.getConnection(
                     config.getDbUrl(), config.getDbUser(), config.getDbPassword())) {
 
+                // Using ON DUPLICATE KEY UPDATE for upsert
                 String sql = "INSERT INTO symbol_list (ticker, company, sector, industry, country) "
-                        + "VALUES (?, ?, ?, ?, ?)";
+                        + "VALUES (?, ?, ?, ?, ?) "
+                        + "ON DUPLICATE KEY UPDATE "
+                        + "company = VALUES(company), "
+                        + "sector = VALUES(sector), "
+                        + "industry = VALUES(industry), "
+                        + "country = VALUES(country)";
 
                 try (CSVReader reader = new CSVReader(new FileReader(csvFile));
                      PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -55,7 +61,7 @@ public class CsvImporter {
                     ps.executeBatch();
                 }
             }
-            System.out.println("CSV import completed!");
+            System.out.println("CSV import completed with insert/update!");
         } catch (Exception e) {
             e.printStackTrace();
         }

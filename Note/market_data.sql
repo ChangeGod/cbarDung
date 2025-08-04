@@ -19,5 +19,10 @@ CREATE TABLE market_data
     Historic_Volatility DECIMAL(10, 4) NULL,
     IV_Rank             DECIMAL(10, 4) NULL,
     IV_Percentile       DECIMAL(10, 4) NULL,
+    Base_LastPrice      DECIMAL(10, 4) NULL,
+    Implied_Move        DECIMAL(10, 4) NULL,
+    Implied_Move_Percent DECIMAL(10, 4) NULL,
+    Base_Upper_Price    DECIMAL(10, 4) NULL,
+    Base_Lower_Price    DECIMAL(10, 4) NULL,
     PRIMARY KEY (symbol, Cycle_Range, expiration_date, expiration_type, update_date)
 );
