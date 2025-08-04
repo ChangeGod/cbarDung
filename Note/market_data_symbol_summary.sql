@@ -2,12 +2,12 @@ CREATE OR REPLACE VIEW market_data_symbol_summary AS
 SELECT
     symbol,
     Cycle_Range,
-    SUM(Put_Vol) AS put_volume_total,
-    SUM(Call_Vol) AS call_volume_total,
+    SUM(Put_Vol) AS put_vol_total,
+    SUM(Call_Vol) AS call_vol_total,
     CASE
         WHEN SUM(Call_Vol) = 0 THEN NULL
         ELSE ROUND(SUM(Put_Vol) / SUM(Call_Vol), 4)
-        END AS put_call_volume_ratio,
+        END AS put_call_vol_ratio,
     SUM(Put_OI) AS put_open_interest_total,
     SUM(Call_OI) AS call_open_interest_total,
     CASE

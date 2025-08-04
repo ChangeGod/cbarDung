@@ -106,7 +106,7 @@ public class BarchartCollect {
                 threadCount = Runtime.getRuntime().availableProcessors();
             }
         } else {
-            threadCount = Runtime.getRuntime().availableProcessors();
+            threadCount = (int) Math.round(Runtime.getRuntime().availableProcessors() / 1.3);
             log("Thread count set to available processors: " + threadCount);
         }
 
@@ -263,11 +263,11 @@ public class BarchartCollect {
                 config.getDbUrl(), config.getDbUser(), config.getDbPassword())) {
 
             String sql = "INSERT INTO market_data(" +
-                    "symbol, Cycle_Range, expiration_date, update_time, " +
+                    "symbol, Cycle_Range, expiration_date, update_date, update_time, " +
                     "DTE, Put_Vol, Call_Vol, Total_Vol, " +
                     "Put_or_Call_Vol, Put_OI, Call_OI, Total_OI, " +
                     "Put_or_Call_OI, IV) " +
-                    "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                    "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
                     "ON DUPLICATE KEY UPDATE " +
                     "Cycle_Range = VALUES(Cycle_Range), " +
                     "update_time = VALUES(update_time), " +
@@ -306,9 +306,12 @@ public class BarchartCollect {
                     String formattedDate = outputFormatter.format(parsedDate);
                     String expirationKey = formattedDate + "-" + typeChar;
 
-                    Timestamp nyTimestamp = Timestamp.valueOf(ZonedDateTime.now(nyZone).toLocalDateTime());
+                    // Current NY date/time split
+                    ZonedDateTime nyNow = ZonedDateTime.now(nyZone);
+                    java.sql.Date updateDate = java.sql.Date.valueOf(nyNow.toLocalDate());
+                    java.sql.Time updateTime = java.sql.Time.valueOf(nyNow.toLocalTime().withNano(0));
 
-                    // ---- Parse numeric fields ----
+                    // Parse numeric fields
                     int daysToExpiration = NumberParser.parseIntSafe(item.path("daysToExpiration").asText());
                     int putVolume = NumberParser.parseIntSafe(item.path("putVolume").asText());
                     int callVolume = NumberParser.parseIntSafe(item.path("callVolume").asText());
@@ -320,21 +323,22 @@ public class BarchartCollect {
                     double putCallOpenInterestRatio = NumberParser.parseDoubleSafe(item.path("putCallOpenInterestRatio").asText());
                     double impliedVolatility = NumberParser.parseVolatility(item.path("averageVolatility").asText());
 
-                    // ---- Set SQL parameters ----
+                    // Set SQL parameters
                     stmt.setString(1, tickerFromDb);
                     stmt.setString(2, CycleHelper.getCycleRange());
                     stmt.setString(3, expirationKey);
-                    stmt.setTimestamp(4, nyTimestamp);
-                    stmt.setInt(5, daysToExpiration);
-                    stmt.setInt(6, putVolume);
-                    stmt.setInt(7, callVolume);
-                    stmt.setInt(8, totalVolume);
-                    stmt.setDouble(9, putCallVolumeRatio);
-                    stmt.setInt(10, putOpenInterest);
-                    stmt.setInt(11, callOpenInterest);
-                    stmt.setInt(12, totalOpenInterest);
-                    stmt.setDouble(13, putCallOpenInterestRatio);
-                    stmt.setDouble(14, impliedVolatility);
+                    stmt.setDate(4, updateDate);
+                    stmt.setTime(5, updateTime);
+                    stmt.setInt(6, daysToExpiration);
+                    stmt.setInt(7, putVolume);
+                    stmt.setInt(8, callVolume);
+                    stmt.setInt(9, totalVolume);
+                    stmt.setDouble(10, putCallVolumeRatio);
+                    stmt.setInt(11, putOpenInterest);
+                    stmt.setInt(12, callOpenInterest);
+                    stmt.setInt(13, totalOpenInterest);
+                    stmt.setDouble(14, putCallOpenInterestRatio);
+                    stmt.setDouble(15, impliedVolatility);
 
                     stmt.addBatch();
                 }
@@ -342,6 +346,7 @@ public class BarchartCollect {
             }
         }
     }
+
 
 
     private static String extractXsrfFromCookies(List<String> cookies) {

@@ -8,6 +8,11 @@ public class CycleHelper {
     public static String getCycleRange() {
         LocalTime now = LocalTime.now(ZoneId.of("America/New_York"));
 
+        // Before Khung 0 (before 8:30)
+        if (now.isBefore(LocalTime.of(8, 30))) {
+            return "Pre cycle";
+        }
+
         if (!now.isBefore(LocalTime.of(8, 30)) && !now.isAfter(LocalTime.of(9, 35))) return "Khung 0: 8:30 – 9:35";
         if (!now.isBefore(LocalTime.of(9, 36)) && !now.isAfter(LocalTime.of(10, 5))) return "Khung 1: 9:36 – 10:05";
         if (!now.isBefore(LocalTime.of(10, 6)) && !now.isAfter(LocalTime.of(10, 35))) return "Khung 2: 10:06 – 10:35";
@@ -24,6 +29,7 @@ public class CycleHelper {
         if (!now.isBefore(LocalTime.of(15, 36)) && !now.isAfter(LocalTime.of(16, 5))) return "Khung 13: 3:36 – 4:05";
         if (!now.isBefore(LocalTime.of(16, 6)) && !now.isAfter(LocalTime.of(16, 35))) return "Khung 14: 4:06 – 4:35";
 
-        return "Outside cycle";
+        // After Khung 14 (after 4:35)
+        return "After cycle";
     }
 }
