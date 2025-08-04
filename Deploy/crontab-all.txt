@@ -16,5 +16,5 @@ PATH=/opt/java/openjdk/bin:/usr/bin:/bin
 6 15 * * 1-5 java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar
 36 15 * * 1-5 java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar
 6 16 * * 1-5 java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar
-
+00 21 * * 1-5 java -Dconfig.file=/app/docker-config.properties -jar /app/barchart.jar
 # Empty line required at the end
