@@ -22,7 +22,6 @@ public class BarchartOptionChainCollect {
     // --- Public method for BarchartCollect to call directly ---
     public static void collectOptionChains(String symbol, java.sql.Date updateDate,
                                            ConfigLoader config, ProxyManager proxyManager) throws Exception {
-        initLogFile(config);
 
         List<ExpirationInfo> expirationList = getExpirationsForSymbol(symbol, config, updateDate);
         if (expirationList.isEmpty()) {
@@ -31,9 +30,10 @@ public class BarchartOptionChainCollect {
         }
 
         for (ExpirationInfo expInfo : expirationList) {
-            LogUtil.log("Processing expiration " + expInfo.date + " (" + expInfo.type + ") for " + symbol);
+//            LogUtil.log("Processing expiration " + expInfo.date + " (" + expInfo.type + ") for " + symbol);
             processOptionChain(symbol.toUpperCase().trim(), expInfo.date.trim(), expInfo.type.trim(), config, proxyManager);
         }
+        LogUtil.log("Option chain data fetched and saved for all expirations of " + symbol);
     }
 
     // --- CLI Main Method ---
@@ -83,8 +83,8 @@ public class BarchartOptionChainCollect {
                 proxyUsed = proxyManager.getNextProxy();
                 HttpClient client = HttpHelper.createHttpClientForSymbol(proxyUsed);
 
-                LogUtil.log("Fetching options chain for " + symbol + " expiration " + expirationDate + " type " + expirationType
-                        + " using proxy: " + proxyUsed + ", public IP: " + getPublicIP(client));
+//                LogUtil.log("Fetching options chain for " + symbol + " expiration " + expirationDate + " type " + expirationType
+//                        + " using proxy: " + proxyUsed + ", public IP: " + getPublicIP(client));
 
                 String pageUrl = "https://www.barchart.com/stocks/quotes/" + symbol + "/options?expiration=" + expirationDate + "-" + expirationType.charAt(0);
                 HttpRequest pageRequest = HttpRequest.newBuilder()
@@ -156,7 +156,7 @@ public class BarchartOptionChainCollect {
 
                 if (baseResponse.statusCode() == 200 && greeksResponse.statusCode() == 200) {
                     saveOptionChain(baseResponse.body(), greeksResponse.body(), config, symbol, expirationDate,expirationType);
-                    LogUtil.log("Option chain saved for " + symbol + " " + expirationDate + " (" + expirationType + ")");
+//                    LogUtil.log("Option chain saved for " + symbol + " " + expirationDate + " (" + expirationType + ")");
                     break;
                 } else {
                     LogUtil.log("Error response: base=" + baseResponse.statusCode() + " greeks=" + greeksResponse.statusCode());

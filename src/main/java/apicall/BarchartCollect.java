@@ -135,7 +135,7 @@ public class BarchartCollect {
                 HttpClient client = HttpHelper.createHttpClientForSymbol(proxyUsed);
                 String ip = getPublicIP(client);
 
-                LogUtil.log("Processing " + ticker + " using proxy: " + proxyUsed + ", public IP detected: " + ip);
+//                LogUtil.log("Processing " + ticker + " using proxy: " + proxyUsed + ", public IP detected: " + ip);
 
                 String pageUrl = "https://www.barchart.com/stocks/quotes/" + ticker + "/put-call-ratios";
                 HttpRequest pageRequest = HttpRequest.newBuilder()
