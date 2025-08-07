@@ -102,7 +102,12 @@ public class BarchartCollect {
         }
 
         executor.shutdown();
-        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        try {
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            LogUtil.log("⚠️ Executor interrupted while waiting for tasks to finish.");
+            Thread.currentThread().interrupt(); // Restore interrupt status
+        }
 
         // Final timing and summary
         long endTime = System.nanoTime();
