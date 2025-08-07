@@ -15,7 +15,9 @@ public class LogUtil {
 
     public static void log(String message) {
         String timestamp = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now());
-        String line = "[" + timestamp + "] " + message;
+        String threadName = Thread.currentThread().getName();
+        String line = "[" + timestamp + "] [Thread: " + threadName + "] " + message;
+
         System.out.println(line);
         if (logFile != null) {
             try {
@@ -28,4 +30,5 @@ public class LogUtil {
             }
         }
     }
+
 }
