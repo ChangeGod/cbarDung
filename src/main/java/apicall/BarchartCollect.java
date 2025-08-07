@@ -102,7 +102,7 @@ public class BarchartCollect {
         }
 
         executor.shutdown();
-        executor.awaitTermination(30, TimeUnit.MINUTES);
+        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 
         // Final timing and summary
         long endTime = System.nanoTime();
