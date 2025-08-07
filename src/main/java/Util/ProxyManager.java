@@ -19,6 +19,9 @@ public class ProxyManager {
     private final boolean useRotation;
     private final Consumer<String> logger;
 
+    // Cache HttpClient for each proxy
+    private final Map<InetSocketAddress, HttpClient> proxyClients = new HashMap<>();
+
     public ProxyManager(ConfigLoader config, Consumer<String> logger) {
         this.logger = logger;
 
@@ -71,7 +74,7 @@ public class ProxyManager {
         this.useRotation = rotationFlag;
     }
 
-
+    // Get the next proxy from the list, avoiding bad ones
     public InetSocketAddress getNextProxy() {
         if (proxies.isEmpty()) return null;
 
@@ -84,6 +87,8 @@ public class ProxyManager {
         }
         return null; // all proxies marked bad
     }
+
+    // Fetch the public IP for a given HttpClient
     public static String getPublicIP(HttpClient client) {
         try {
             HttpRequest request = HttpRequest.newBuilder()
@@ -101,8 +106,7 @@ public class ProxyManager {
         }
     }
 
-
-
+    // Get the current proxy (if rotation is enabled, get the next one)
     public InetSocketAddress getCurrentProxy() {
         if (proxies.isEmpty()) return null;
         if (useRotation) {
@@ -112,8 +116,26 @@ public class ProxyManager {
         return proxies.get(0);
     }
 
+    // Mark a proxy as bad
     public void markProxyBad(InetSocketAddress proxy) {
         badProxies.add(proxy);
         logger.accept("Proxy marked as bad: " + proxy);
+    }
+
+    // Get or create HttpClient for the given proxy
+    public HttpClient getHttpClientForProxy(InetSocketAddress proxy) {
+        if (proxyClients.containsKey(proxy)) {
+            return proxyClients.get(proxy); // Reuse existing HttpClient
+        }
+
+        // Create a new HttpClient for the proxy
+        HttpClient client = HttpClient.newBuilder()
+                .proxy(ProxySelector.of(proxy))
+                .connectTimeout(Duration.ofSeconds(30))
+                .build();
+
+        // Cache the HttpClient for reuse
+        proxyClients.put(proxy, client);
+        return client;
     }
 }

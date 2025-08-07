@@ -147,9 +147,11 @@ public class BarchartOptionChainCollect {
         java.sql.Date updateDate = java.sql.Date.valueOf(nyNow.toLocalDate());
         java.sql.Time updateTime = java.sql.Time.valueOf(nyNow.toLocalTime().withNano(0));
 
-        int batchSize = 200;
+        int batchSize = 100;  // Reduced batch size
         int count = 0; // Row counter for batch size
         try (Connection conn = ConnectionPool.getConnection()) {
+            conn.setAutoCommit(false);  // Disable auto-commit
+
             String sql = "INSERT INTO option_chain_data(" +
                     "symbol, Cycle_Range, expiration_date, expiration_type, update_date, update_time, " +
                     "contract_type, strike, moneyness, bid, mid, ask, last, theoretical, " +
@@ -175,19 +177,23 @@ public class BarchartOptionChainCollect {
                 }
 
                 stmt.addBatch(); // Add the option record to the batch
-
                 count++;
                 if (count % batchSize == 0) {
                     stmt.executeBatch(); // Execute the batch
-                    count = 0; // Reset counter after batch commit
+                    conn.commit();       // Commit the transaction
+                    stmt.clearBatch();   // Clear the batch after execution
+                    count = 0;           // Reset counter after batch commit
                 }
 
                 if (count > 0) {
                     stmt.executeBatch(); // Execute any remaining rows in the batch
+                    conn.commit();       // Commit the transaction
+                    stmt.clearBatch();   // Clear the batch
                 }
             }
         }
     }
+
 
     private static void addOptionRecord(PreparedStatement stmt, JsonNode node,
                                         String baseSymbol, String expirationDate, String expirationType,

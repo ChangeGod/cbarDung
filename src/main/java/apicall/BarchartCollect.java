@@ -83,7 +83,7 @@ public class BarchartCollect {
                 LogUtil.log("🛑 Progress logging stopping — all tickers processed.");
                 progressLogger.shutdown();
             }
-        }, 30, 30, TimeUnit.SECONDS); // Initial delay: 30s, Interval: 30s
+        }, 60, 60, TimeUnit.SECONDS); // Initial delay: 60s, Interval: 60s
 
         // Submit tasks
         for (String ticker : tickers) {
