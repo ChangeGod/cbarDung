@@ -14,6 +14,7 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static Util.ProxyManager.getPublicIP;
@@ -59,28 +60,55 @@ public class BarchartCollect {
         int threadCount = getThreadCount(args);
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
+        AtomicInteger completedCount = new AtomicInteger(0);
+        long startTime = System.nanoTime();
+
+        LogUtil.log("🚀 Starting processing of " + tickers.size() + " symbols using " + threadCount + " threads...");
+
+        // Periodic logger for progress
+        ScheduledExecutorService progressLogger = Executors.newSingleThreadScheduledExecutor();
+        progressLogger.scheduleAtFixedRate(() -> {
+            int done = completedCount.get();
+            long elapsedNano = System.nanoTime() - startTime;
+            double elapsedMinutes = elapsedNano / 1_000_000_000.0 / 60.0;
+            double speed = elapsedMinutes > 0 ? done / elapsedMinutes : 0.0;
+            LogUtil.log("⏳ Progress: " + done + "/" + tickers.size() +
+                    " completed | " + String.format("%.2f", speed) + " symbols/min");
+        }, 30, 30, TimeUnit.SECONDS);  // First delay, then interval
+
+        // Submit tasks
         for (String ticker : tickers) {
             executor.submit(() -> {
                 try {
                     java.sql.Date updateDate = new java.sql.Date(System.currentTimeMillis());
                     processTicker(ticker, config, proxyManager);
 
-                    // strike-level chain data
                     BarchartOptionChainCollect.collectOptionChains(ticker, updateDate, config, proxyManager);
-
                     BarchartHtmlFetcher.fetchAndStoreVolatilityData(ticker, config, proxyManager);
 
-                    LogUtil.log("Data inserted/updated for: " + ticker);
+                    LogUtil.log("✅ Completed processing for: " + ticker);
+                    completedCount.incrementAndGet();
                 } catch (Exception e) {
-                    LogUtil.log("Error processing ticker " + ticker + ": " + e.getMessage());
+                    LogUtil.log("❌ Error processing ticker " + ticker + ": " + e.getMessage());
                 }
             });
         }
 
         executor.shutdown();
         executor.awaitTermination(30, TimeUnit.MINUTES);
-        LogUtil.log("All tickers processed.");
+        progressLogger.shutdownNow();
+
+        // Final timing and summary
+        long endTime = System.nanoTime();
+        double durationMinutes = (endTime - startTime) / 1_000_000_000.0 / 60.0;
+        int totalDone = completedCount.get();
+        double finalSpeed = totalDone / durationMinutes;
+
+        LogUtil.log("✅ All tickers processed.");
+        LogUtil.log("⏱️  Total time: " + String.format("%.2f", durationMinutes) + " minutes");
+        LogUtil.log("⚡ Final speed: " + String.format("%.2f", finalSpeed) + " symbols per minute");
     }
+
 
     private static int getThreadCount(String[] args) {
         int threadCount;

@@ -31,7 +31,7 @@ public class BarchartOptionChainCollect {
         for (ExpirationInfo expInfo : expirationList) {
             processOptionChain(symbol.toUpperCase().trim(), expInfo.date.trim(), expInfo.type.trim(), config, proxyManager);
         }
-        LogUtil.log("Option chain data fetched and saved for all expirations of " + symbol);
+//        LogUtil.log("Option chain data fetched and saved for all expirations of " + symbol);
     }
 
     public static void main(String[] args) throws Exception {
