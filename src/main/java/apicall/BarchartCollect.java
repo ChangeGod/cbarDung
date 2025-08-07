@@ -248,7 +248,8 @@ public class BarchartCollect {
         ZonedDateTime nyNow = ZonedDateTime.now(nyZone);
         java.sql.Date updateDate = java.sql.Date.valueOf(nyNow.toLocalDate());
         java.sql.Time updateTime = java.sql.Time.valueOf(nyNow.toLocalTime().withNano(0));
-
+        int batchSize = 200;
+        int count = 0;        // Row counter for batch size
         try (Connection conn = ConnectionPool.getConnection()) {
             String sql = "INSERT INTO market_data(" +
                     "symbol, Cycle_Range, expiration_date, expiration_type, update_date, update_time, " +
@@ -310,8 +311,15 @@ public class BarchartCollect {
                     stmt.setDouble(21, NumberParser.parseDoubleSafe(item.path("baseLowerPrice").asText()));
 
                     stmt.addBatch();
+                    count++;
+                    if (count % batchSize == 0) {
+                        stmt.executeBatch(); // Execute batch every `batchSize` rows
+                        count = 0; // Reset the batch counter
+                    }
                 }
-                stmt.executeBatch();
+                if (count > 0) {
+                    stmt.executeBatch(); // Execute any remaining rows in the batch
+                }
             }
         }
     }

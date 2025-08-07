@@ -147,6 +147,8 @@ public class BarchartOptionChainCollect {
         java.sql.Date updateDate = java.sql.Date.valueOf(nyNow.toLocalDate());
         java.sql.Time updateTime = java.sql.Time.valueOf(nyNow.toLocalTime().withNano(0));
 
+        int batchSize = 200;
+        int count = 0; // Row counter for batch size
         try (Connection conn = ConnectionPool.getConnection()) {
             String sql = "INSERT INTO option_chain_data(" +
                     "symbol, Cycle_Range, expiration_date, expiration_type, update_date, update_time, " +
@@ -171,7 +173,18 @@ public class BarchartOptionChainCollect {
                         }
                     }
                 }
-                stmt.executeBatch();
+
+                stmt.addBatch(); // Add the option record to the batch
+
+                count++;
+                if (count % batchSize == 0) {
+                    stmt.executeBatch(); // Execute the batch
+                    count = 0; // Reset counter after batch commit
+                }
+
+                if (count > 0) {
+                    stmt.executeBatch(); // Execute any remaining rows in the batch
+                }
             }
         }
     }
