@@ -124,7 +124,7 @@ public class BarchartOptionChainCollect {
                 HttpResponse<String> combinedResponse = client.send(combinedRequest, HttpResponse.BodyHandlers.ofString());
 
                 if (combinedResponse.statusCode() == 200) {
-                    saveOptionChain(combinedResponse.body(), config, symbol, expirationDate, expirationType);
+                    saveOptionChain(combinedResponse.body(), symbol, expirationDate, expirationType);
                     break;
                 } else {
                     LogUtil.log("Error response for " + symbol + ": status=" + combinedResponse.statusCode());
@@ -137,7 +137,7 @@ public class BarchartOptionChainCollect {
         }
     }
 
-    private static void saveOptionChain(String json, ConfigLoader config, String baseSymbol,
+    private static void saveOptionChain(String json, String baseSymbol,
                                         String expirationDate, String expirationType) throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root = mapper.readTree(json).path("data");
@@ -147,7 +147,7 @@ public class BarchartOptionChainCollect {
         java.sql.Date updateDate = java.sql.Date.valueOf(nyNow.toLocalDate());
         java.sql.Time updateTime = java.sql.Time.valueOf(nyNow.toLocalTime().withNano(0));
 
-        try (Connection conn = DriverManager.getConnection(config.getDbUrl(), config.getDbUser(), config.getDbPassword())) {
+        try (Connection conn = ConnectionPool.getConnection()) {
             String sql = "INSERT INTO option_chain_data(" +
                     "symbol, Cycle_Range, expiration_date, expiration_type, update_date, update_time, " +
                     "contract_type, strike, moneyness, bid, mid, ask, last, theoretical, " +
@@ -221,7 +221,7 @@ public class BarchartOptionChainCollect {
     private static List<ExpirationInfo> getExpirationsForSymbol(String symbol, ConfigLoader config, java.sql.Date updateDate) throws SQLException {
         List<ExpirationInfo> list = new ArrayList<>();
         String sql = "SELECT DISTINCT expiration_date, expiration_type FROM market_data WHERE symbol = ? AND update_date = ?";
-        try (Connection conn = DriverManager.getConnection(config.getDbUrl(), config.getDbUser(), config.getDbPassword());
+        try ( Connection conn = ConnectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, symbol);
             stmt.setDate(2, updateDate);

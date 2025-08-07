@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import Util.ConnectionPool;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -73,7 +74,7 @@ public class BarchartHtmlFetcher {
             double ivRankVal = parseDoubleSafe(ivRank);
             double ivPercentileVal = parseDoubleSafe(ivPercentile);
 
-            insertIntoDatabase(symbol, hvVal, ivRankVal, ivPercentileVal, config);
+            insertIntoDatabase(symbol, hvVal, ivRankVal, ivPercentileVal);
 
         } catch (Exception e) {
             System.err.println("Error fetching HTML for " + symbol + ": " + e.getMessage());
@@ -81,14 +82,15 @@ public class BarchartHtmlFetcher {
         }
     }
 
-    private static void insertIntoDatabase(String symbol, double hv, double ivRank, double ivPercentile, ConfigLoader config) {
+    private static void insertIntoDatabase(String symbol, double hv, double ivRank, double ivPercentile) {
         String sql = "UPDATE market_data " +
                 "SET Historic_Volatility = ?, IV_Rank = ?, IV_Percentile = ? " +
                 "WHERE symbol = ?";
 
-        try (Connection conn = DriverManager.getConnection(config.getDbUrl(), config.getDbUser(), config.getDbPassword());
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        try (
+                Connection conn = ConnectionPool.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)
+        ) {
             stmt.setDouble(1, hv);
             stmt.setDouble(2, ivRank);
             stmt.setDouble(3, ivPercentile);
@@ -101,6 +103,7 @@ public class BarchartHtmlFetcher {
             e.printStackTrace();
         }
     }
+
 
     private static double parseDoubleSafe(String value) {
         if (value == null) return 0.0;

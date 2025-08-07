@@ -37,6 +37,8 @@ public class BarchartCollect {
 
         ConfigLoader config = new ConfigLoader();
         initLogFile(config);
+        int threadCount = getThreadCount(args);
+        ConnectionPool.init(config, threadCount);
         ProxyManager proxyManager = new ProxyManager(config, LogUtil::log);
 
         List<String> tickers;
@@ -44,20 +46,20 @@ public class BarchartCollect {
             String arg = args[0].trim().toLowerCase();
             if ("priority".equals(arg)) {
                 LogUtil.log("Running in PRIORITY mode (only Priority=1 symbols)");
-                tickers = loadTickers(config, true);
+                tickers = loadTickers(true);
             } else {
                 LogUtil.log("Running in single-symbol mode for: " + args[0]);
                 tickers = Collections.singletonList(args[0].toUpperCase());
             }
         } else {
-            tickers = loadTickers(config, false);
+            tickers = loadTickers(false);
             if (tickers.isEmpty()) {
                 LogUtil.log("No tickers found in symbol_list.");
                 return;
             }
         }
 
-        int threadCount = getThreadCount(args);
+
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
         AtomicInteger completedCount = new AtomicInteger(0);
@@ -88,7 +90,7 @@ public class BarchartCollect {
             executor.submit(() -> {
                 try {
                     java.sql.Date updateDate = new java.sql.Date(System.currentTimeMillis());
-                    processTicker(ticker, config, proxyManager);
+                    processTicker(ticker, proxyManager);
 
                     BarchartOptionChainCollect.collectOptionChains(ticker, updateDate, config, proxyManager);
                     BarchartHtmlFetcher.fetchAndStoreVolatilityData(ticker, config, proxyManager);
@@ -118,6 +120,8 @@ public class BarchartCollect {
         LogUtil.log("✅ All tickers processed.");
         LogUtil.log("⏱️  Total time: " + String.format("%.2f", durationMinutes) + " minutes");
         LogUtil.log("⚡ Final speed: " + String.format("%.2f", finalSpeed) + " symbols per minute");
+
+        ConnectionPool.close();
     }
 
 
@@ -145,18 +149,23 @@ public class BarchartCollect {
         if (!Files.exists(logDirPath)) {
             Files.createDirectories(logDirPath);
         }
+
         String timestamp = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss").format(LocalDateTime.now());
         Path logFile = logDirPath.resolve("barchart_" + timestamp + ".log");
+
         LogUtil.init(logFile);
+
+        // 🔁 Tell Logback to use the same file
+        System.setProperty("logFile", logFile.toString());
     }
 
-    private static List<String> loadTickers(ConfigLoader config, boolean priorityOnly) throws Exception {
+    private static List<String> loadTickers( boolean priorityOnly) throws Exception {
         List<String> tickers = new ArrayList<>();
         String sql = priorityOnly
                 ? "SELECT ticker FROM symbol_list WHERE Priority = 1"
                 : "SELECT ticker FROM symbol_list";
 
-        try (Connection conn = DriverManager.getConnection(config.getDbUrl(), config.getDbUser(), config.getDbPassword());
+        try ( Connection conn = ConnectionPool.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
@@ -166,7 +175,7 @@ public class BarchartCollect {
         return tickers;
     }
 
-    private static void processTicker(String ticker, ConfigLoader config, ProxyManager proxyManager) {
+    private static void processTicker(String ticker, ProxyManager proxyManager) {
         int maxRetries = 10;
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             InetSocketAddress proxyUsed = null;
@@ -217,7 +226,7 @@ public class BarchartCollect {
 //                LogUtil.log("API Response for " + ticker + ": " + apiResponse.body());
 
                 if (apiResponse.statusCode() == 200) {
-                    saveToDatabase(apiResponse.body(), config, ticker);
+                    saveToDatabase(apiResponse.body(), ticker);
                     break;
                 } else {
                     LogUtil.log("Failed API for " + ticker + ": " + apiResponse.statusCode());
@@ -230,7 +239,7 @@ public class BarchartCollect {
         }
     }
 
-    private static void saveToDatabase(String jsonResponse, ConfigLoader config, String tickerFromDb) throws Exception {
+    private static void saveToDatabase(String jsonResponse, String tickerFromDb) throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root = mapper.readTree(jsonResponse);
         JsonNode dataArray = root.path("data");
@@ -240,7 +249,7 @@ public class BarchartCollect {
         java.sql.Date updateDate = java.sql.Date.valueOf(nyNow.toLocalDate());
         java.sql.Time updateTime = java.sql.Time.valueOf(nyNow.toLocalTime().withNano(0));
 
-        try (Connection conn = DriverManager.getConnection(config.getDbUrl(), config.getDbUser(), config.getDbPassword())) {
+        try (Connection conn = ConnectionPool.getConnection()) {
             String sql = "INSERT INTO market_data(" +
                     "symbol, Cycle_Range, expiration_date, expiration_type, update_date, update_time, " +
                     "DTE, Put_Vol, Call_Vol, Total_Vol, Put_or_Call_Vol, Put_OI, Call_OI, Total_OI, " +
