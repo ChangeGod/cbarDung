@@ -72,9 +72,16 @@ public class BarchartCollect {
             long elapsedNano = System.nanoTime() - startTime;
             double elapsedMinutes = elapsedNano / 1_000_000_000.0 / 60.0;
             double speed = elapsedMinutes > 0 ? done / elapsedMinutes : 0.0;
+
             LogUtil.log("⏳ Progress: " + done + "/" + tickers.size() +
                     " completed | " + String.format("%.2f", speed) + " symbols/min");
-        }, 30, 30, TimeUnit.SECONDS);  // First delay, then interval
+
+            // Stop logging when all are completed
+            if (done >= tickers.size()) {
+                LogUtil.log("🛑 Progress logging stopping — all tickers processed.");
+                progressLogger.shutdown();
+            }
+        }, 30, 30, TimeUnit.SECONDS); // Initial delay: 30s, Interval: 30s
 
         // Submit tasks
         for (String ticker : tickers) {
@@ -96,7 +103,6 @@ public class BarchartCollect {
 
         executor.shutdown();
         executor.awaitTermination(30, TimeUnit.MINUTES);
-        progressLogger.shutdownNow();
 
         // Final timing and summary
         long endTime = System.nanoTime();
@@ -108,6 +114,7 @@ public class BarchartCollect {
         LogUtil.log("⏱️  Total time: " + String.format("%.2f", durationMinutes) + " minutes");
         LogUtil.log("⚡ Final speed: " + String.format("%.2f", finalSpeed) + " symbols per minute");
     }
+
 
 
     private static int getThreadCount(String[] args) {

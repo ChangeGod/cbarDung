@@ -4,6 +4,7 @@ import Util.ConfigLoader;
 import com.opencsv.CSVReader;
 
 import java.io.FileReader;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -23,13 +24,14 @@ public class CsvImporter {
                     config.getDbUrl(), config.getDbUser(), config.getDbPassword())) {
 
                 // Using ON DUPLICATE KEY UPDATE for upsert
-                String sql = "INSERT INTO symbol_list (ticker, company, sector, industry, country) "
-                        + "VALUES (?, ?, ?, ?, ?) "
+                String sql = "INSERT INTO symbol_list (ticker, company, sector, industry, country, market_cap) "
+                        + "VALUES (?, ?, ?, ?, ?, ?) "
                         + "ON DUPLICATE KEY UPDATE "
                         + "company = VALUES(company), "
                         + "sector = VALUES(sector), "
                         + "industry = VALUES(industry), "
-                        + "country = VALUES(country)";
+                        + "country = VALUES(country),"
+                        + "market_cap = VALUES(market_cap)";
 
                 try (CSVReader reader = new CSVReader(new FileReader(csvFile));
                      PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -49,12 +51,15 @@ public class CsvImporter {
                         String sector = line[3];
                         String industry = line[4];
                         String country = line[5];
+                        BigDecimal market_cap = new BigDecimal(line[6]);
 
                         ps.setString(1, ticker);
                         ps.setString(2, company);
                         ps.setString(3, sector);
                         ps.setString(4, industry);
                         ps.setString(5, country);
+                        ps.setBigDecimal(6, market_cap);
+//                        System.out.println("Parsed market cap: " + market_cap + " for ticker: " + ticker);
 
                         ps.addBatch();
                     }
